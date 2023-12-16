@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
 
-from recipes.constants import MAX_INGREDIENTS
+from recipes.constants import ADMIN_INLINE_EXTRA
 
 from .models import (AmountIngredient, Favorite, Ingredient, Recipe,
                      ShoppingCart, Tag)
@@ -10,7 +10,7 @@ from .models import (AmountIngredient, Favorite, Ingredient, Recipe,
 
 class IngredientInline(admin.TabularInline):
     model = AmountIngredient
-    extra = MAX_INGREDIENTS
+    extra = ADMIN_INLINE_EXTRA
 
 
 class RecipeAdmin(admin.ModelAdmin):
