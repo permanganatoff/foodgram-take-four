@@ -30,12 +30,13 @@ class Command(BaseCommand):
         )
 
     def load_data(self, file_name, model):
-        with open(
-            f"{settings.BASE_DIR}/data/{file_name}", encoding="utf-8"
-        ) as data_file:
+        data_file = open(f"{settings.BASE_DIR}/data/{file_name}", encoding="utf-8")
+        try:
             data = json.load(data_file)
             for item in data:
                 model.objects.get_or_create(**item)
+        finally:
+            data_file.close()
 
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.WARNING("Начало загрузки"))
