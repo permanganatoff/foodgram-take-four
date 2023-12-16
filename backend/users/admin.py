@@ -4,7 +4,6 @@ from django.contrib.auth.admin import UserAdmin
 from .models import Subscription, User
 
 
-@admin.register(User)
 class UserAdmin(UserAdmin):
     list_display = (
         "username",
@@ -21,7 +20,7 @@ class UserAdmin(UserAdmin):
         "username",
         "email",
     )
-    empty_value_display = "-пусто-"
+    empty_value_display = "-empty-"
 
     save_on_top = True
 
@@ -34,11 +33,14 @@ class UserAdmin(UserAdmin):
         return obj.author.count()
 
 
-@admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "author")
     search_fields = ("user", "author")
     list_filter = ("user", "author")
-    empty_value_display = "-пусто-"
+    empty_value_display = "-empty-"
 
     save_on_top = True
+
+
+admin.site.register(User, UserAdmin)
+admin.site.register(Subscription, SubscriptionAdmin)

@@ -2,25 +2,17 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
 
-from recipes.constants import MAX_VALUE, MIN_VALUE
+from recipes.constants import MAX_INGREDIENTS
 
 from .models import (AmountIngredient, Favorite, Ingredient, Recipe,
                      ShoppingCart, Tag)
 
-admin.site.site_header = "Администрирование Foodgram"
-admin.site.unregister(Group)
-
 
 class IngredientInline(admin.TabularInline):
     model = AmountIngredient
-    extra = 1
-    min_num = MIN_VALUE
-    max_num = MAX_VALUE
-    validate_min = True
-    validate_max = True
+    extra = MAX_INGREDIENTS
 
 
-@admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         "name",
@@ -52,17 +44,17 @@ class RecipeAdmin(admin.ModelAdmin):
 
     inlines = (IngredientInline,)
     save_on_top = True
-    empty_value_display = "-пусто-"
+    empty_value_display = "-empty-"
 
-    @admin.display(description="Фотография")
+    @admin.display(description="Photo")
     def get_image(self, obj):
         return mark_safe(f"<img src={obj.image.url} width='80' hieght='30'")
 
-    @admin.display(description="В избранном")
+    @admin.display(description="In favorites")
     def count_favorites(self, obj):
         return obj.recipes_favorite_related.count()
 
-    @admin.display(description="Ингредиенты")
+    @admin.display(description="Ingredients")
     def get_ingredients(self, obj):
         return ", ".join(
             ingredient.name for ingredient in obj.ingredients.all())
@@ -70,7 +62,6 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display_links = ("name", "author")
 
 
-@admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = (
         "name",
@@ -78,37 +69,34 @@ class IngredientAdmin(admin.ModelAdmin):
     )
     search_fields = ("name",)
     list_filter = ("name",)
-    empty_value_display = "-пусто-"
+    empty_value_display = "-empty-"
 
     save_on_top = True
 
 
-@admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "color",
         "slug",
     )
-    empty_value_display = "-пусто-"
+    empty_value_display = "-empty-"
     search_fields = ("name", "color")
     list_display_links = ("name", "color")
     save_on_top = True
 
 
-@admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = (
         "user",
         "recipe",
     )
     search_fields = ("user__username", "recipe__name")
-    empty_value_display = "-пусто-"
+    empty_value_display = "-empty-"
     list_display_links = ("user", "recipe")
     save_on_top = True
 
 
-@admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = (
         "user",
@@ -116,18 +104,27 @@ class FavoriteAdmin(admin.ModelAdmin):
         "date_added",
     )
     search_fields = ("user__username", "recipe__name")
-    empty_value_display = "-пусто-"
+    empty_value_display = "-empty-"
     list_display_links = ("user", "recipe")
     save_on_top = True
 
 
-@admin.register(AmountIngredient)
 class AmountIngredientAdmin(admin.ModelAdmin):
     list_display = (
         "recipe",
         "ingredient",
         "amount",
     )
-    empty_value_display = "-пусто-"
+    empty_value_display = "-empty-"
     list_display_links = ("recipe", "ingredient")
     save_on_top = True
+
+
+admin.site.site_header = "Foodgram Administration"
+admin.site.register(Recipe, RecipeAdmin)
+admin.site.register(Ingredient, IngredientAdmin)
+admin.site.register(Tag, TagAdmin)
+admin.site.register(ShoppingCart, ShoppingCartAdmin)
+admin.site.register(Favorite, FavoriteAdmin)
+admin.site.register(AmountIngredient, AmountIngredientAdmin)
+admin.site.unregister(Group)
