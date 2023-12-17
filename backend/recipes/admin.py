@@ -4,8 +4,8 @@ from django.utils.safestring import mark_safe
 
 from recipes.constants import ADMIN_INLINE_EXTRA
 
-from .models import (AmountIngredient, Favorite, Ingredient, Recipe,
-                     ShoppingCart, Tag)
+from .models import (AmountIngredient, Favorite, Ingredient,
+                     Recipe, ShoppingCart, Tag)
 
 
 class IngredientInline(admin.TabularInline):
@@ -15,116 +15,74 @@ class IngredientInline(admin.TabularInline):
 
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
-        "name",
-        "author",
-        "get_image",
-        "cooking_time",
-        "count_favorites",
-        "get_ingredients",
+        'name',
+        'author',
+        'pub_date',
+        'display_ingredients',
+        'display_image',
+        'display_favorites_count',
     )
     fields = (
-        (
-            "name",
-            "cooking_time",
-        ),
-        (
-            "author",
-            "tags",
-        ),
-        ("text",),
-        ("image",),
+        ('name', 'tags',),
+        ('text', 'cooking_time'),
+        ('author', 'image'),
     )
-    raw_id_fields = ("author",)
     search_fields = (
-        "name",
-        "author__username",
-        "tags__name",
+        'name',
+        'author__username',
+        'tags__name',
     )
-    list_filter = ("name", "author__username", "tags__name")
-
+    list_filter = ('name', 'author__username', 'tags__name')
+    list_display_links = ('name', 'author')
+    raw_id_fields = ('author',)
     inlines = (IngredientInline,)
-    save_on_top = True
-    empty_value_display = "-empty-"
 
-    @admin.display(description="Photo")
-    def get_image(self, obj):
-        return mark_safe(f"<img src={obj.image.url} width='80' hieght='30'")
+    @admin.display(description='Ingredients')
+    def display_ingredients(self, obj):
+        ingredients_list = [ingredient.name for ingredient in obj.ingredients.all()]
+        if ingredients_list:
+            return ', '.join(ingredients_list)
+        else:
+            return '-'
 
-    @admin.display(description="In favorites")
-    def count_favorites(self, obj):
+    @admin.display(description='Photo')
+    def display_image(self, obj):
+        return mark_safe(f"<img src={obj.image.url} width='70' height='35' border='3'>")
+
+    @admin.display(description='In favorites')
+    def display_favorites_count(self, obj):
         return obj.recipes_favorite_related.count()
-
-    @admin.display(description="Ingredients")
-    def get_ingredients(self, obj):
-        return ", ".join(
-            ingredient.name for ingredient in obj.ingredients.all())
-
-    list_display_links = ("name", "author")
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = (
-        "name",
-        "measurement_unit",
-    )
-    search_fields = ("name",)
-    list_filter = ("name",)
-    empty_value_display = "-empty-"
-
-    save_on_top = True
+    list_display = ('name', 'measurement_unit')
+    search_fields = ('name',)
+    list_filter = ('name',)
 
 
 class TagAdmin(admin.ModelAdmin):
-    list_display = (
-        "name",
-        "color",
-        "slug",
-    )
-    empty_value_display = "-empty-"
-    search_fields = ("name", "color")
-    list_display_links = ("name", "color")
-    save_on_top = True
+    list_display = ('name', 'color', 'slug')
+    search_fields = ('name', 'color')
+    list_display_links = ('name', 'color')
 
 
 class ShoppingCartAdmin(admin.ModelAdmin):
-    list_display = (
-        "user",
-        "recipe",
-    )
-    search_fields = ("user__username", "recipe__name")
-    empty_value_display = "-empty-"
-    list_display_links = ("user", "recipe")
-    save_on_top = True
+    list_display = ('user', 'recipe')
+    search_fields = ('user__username', 'recipe__name')
+    list_display_links = ('user', 'recipe')
 
 
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = (
-        "user",
-        "recipe",
-        "date_added",
-    )
-    search_fields = ("user__username", "recipe__name")
-    empty_value_display = "-empty-"
-    list_display_links = ("user", "recipe")
-    save_on_top = True
+    list_display = ('user', 'recipe', 'date_added')
+    search_fields = ('user__username', 'recipe__name')
+    list_display_links = ('user', 'recipe')
 
 
-class AmountIngredientAdmin(admin.ModelAdmin):
-    list_display = (
-        "recipe",
-        "ingredient",
-        "amount",
-    )
-    empty_value_display = "-empty-"
-    list_display_links = ("recipe", "ingredient")
-    save_on_top = True
-
-
-admin.site.site_header = "Foodgram Administration"
+admin.site.site_header = 'Foodgram Administration'
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(ShoppingCart, ShoppingCartAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
-admin.site.register(AmountIngredient, AmountIngredientAdmin)
+admin.site.register(AmountIngredient)
 admin.site.unregister(Group)
