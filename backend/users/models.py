@@ -12,6 +12,18 @@ class User(AbstractUser):
     USERNAME_FIELD = USERNAME_FIELD_CONST
     REQUIRED_FIELDS = REQUIRED_FIELDS_CONST
 
+    username = models.CharField(
+        verbose_name='Username',
+        max_length=MAX_LEN_NAME,
+        unique=True,
+        help_text='Enter username',
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Z0-9]+([_.-]?[a-zA-Z0-9])*$',
+                message=('Only numbers, latin letters, underscore, dash, dote. '
+                         'Marks should not be at beginning.')
+            )]
+    )
     email = models.EmailField(
         verbose_name='User email',
         max_length=MAX_LEN_EMAIL,
@@ -28,18 +40,6 @@ class User(AbstractUser):
         verbose_name='User last name',
         max_length=MAX_LEN_NAME,
         help_text='Enter user last name'
-    )
-    username = models.CharField(
-        verbose_name='Username',
-        max_length=MAX_LEN_NAME,
-        unique=True,
-        help_text='Enter username',
-        validators=[
-            RegexValidator(
-                regex=r'^[a-zA-Z0-9]+([_.-]?[a-zA-Z0-9])*$',
-                message=('Only numbers, latin letters, underscore, dash, dote. '
-                         'Marks should not be at beginning.')
-            )]
     )
 
     class Meta:

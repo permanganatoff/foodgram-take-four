@@ -1,7 +1,7 @@
-import io
+from io import StringIO
 
 from django.db.models import Sum
-from django.http import FileResponse
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import permissions, status, viewsets
@@ -152,6 +152,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(methods=("get",), detail=False)
     def download_shopping_cart(self, request):
+        text_stream = StringIO()
+        text_stream.write('Список покупок\n')
+        text_stream.write('Ингредиент --- Единица измерения --- Количество\n')
         shopping_cart = (
             AmountIngredient.objects.select_related("recipe", "ingredient")
             .filter(recipe__recipes_shoppingcart_related__user=request.user)
@@ -162,16 +165,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             .annotate(amount=Sum("amount"))
             .order_by("ingredient__name")
         )
-        return self.create_file_response(shopping_cart)
-
-    @staticmethod
-    def create_file_response(shopping_cart):
-        buffer = io.StringIO()
-        buffer.write(
-            "\n".join("\t".join(map(str, item)) for item in shopping_cart)
-        )
-        response = FileResponse(buffer.getvalue(), content_type="text/plain")
-        response[
-            "Content-Disposition"
-        ] = 'attachment; filename="shopping_cart.txt"'
+        lines = (" --- ".join(map(str, item)) + "\n" for item in shopping_cart)
+        text_stream.writelines(lines)
+        response = HttpResponse(text_stream.getvalue(), content_type="text/plain")
+        response["Content-Disposition"] = (
+            'attachment;filename="shopping_cart.txt"')
         return response

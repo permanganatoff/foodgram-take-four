@@ -9,6 +9,38 @@ from users.models import User
 models.CharField.register_lookup(Length)
 
 
+class Tag(models.Model):
+    """Tag model."""
+    
+    name = models.CharField(
+        verbose_name='Tag name',
+        max_length=MAX_LEN_TITLE,
+        unique=True,
+        help_text='Enter tag name'
+    )
+    slug = models.SlugField(
+        verbose_name='Tag slug',
+        max_length=MAX_LEN_TITLE,
+        unique=True,
+        help_text='Enter tag slug'
+    )
+    color = ColorField(
+        verbose_name='HEX-code for color',
+        max_length=MAX_HEX,
+        unique=True,
+        help_text='Choose color for tag'
+    )
+
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Tags'
+
+    def __str__(self):
+        return self.name
+
+
 class Ingredient(models.Model):
     """Ingredient model."""
     
@@ -38,37 +70,6 @@ class Ingredient(models.Model):
         return f'{self.name}, {self.measurement_unit}'
 
 
-class Tag(models.Model):
-    """Tag model."""
-    
-    name = models.CharField(
-        verbose_name='Tag name',
-        max_length=MAX_LEN_TITLE,
-        unique=True,
-        help_text='Enter tag name'
-    )
-    color = ColorField(
-        verbose_name='HEX-code for color',
-        max_length=MAX_HEX,
-        unique=True,
-        help_text='Choose color for tag'
-    )
-    slug = models.SlugField(
-        verbose_name='Tag slug',
-        max_length=MAX_LEN_TITLE,
-        unique=True,
-        help_text='Enter tag slug'
-    )
-
-    class Meta:
-        ordering = ('name',)
-        verbose_name = 'Tag'
-        verbose_name_plural = 'Tags'
-
-    def __str__(self):
-        return self.name
-
-
 class Recipe(models.Model):
     """Recipe model."""
     
@@ -77,13 +78,19 @@ class Recipe(models.Model):
         max_length=MAX_LEN_TITLE,
         help_text='Enter recipe name'
     )
+    text = models.TextField(
+        verbose_name='Recipe text',
+        help_text='Enter recipe text'
+    )
     image = models.ImageField(
         verbose_name='Recipe image',
         upload_to='recipes/images/',
         help_text='Upload recipe image'
     )
-    text = models.TextField(
-        verbose_name='Recipe text', help_text='Enter recipe text'
+    pub_date = models.DateTimeField(
+        verbose_name='Publication date',
+        auto_now_add=True,
+        editable=False,
     )
     author = models.ForeignKey(
         to=User,
@@ -92,13 +99,8 @@ class Recipe(models.Model):
         verbose_name='Recipe author',
         help_text='Choose recipe author'
     )
-    pub_date = models.DateTimeField(
-        verbose_name='Publication date',
-        auto_now_add=True,
-        editable=False,
-    )
     cooking_time = models.PositiveSmallIntegerField(
-        'Cooking time',
+        verbose_name='Cooking time',
         validators=[
             MinValueValidator(limit_value=MIN_AMOUNT,
                               message=f'At least {MIN_AMOUNT} minute!'),
