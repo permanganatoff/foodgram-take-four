@@ -25,8 +25,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        return (request.user.is_authenticated
-                and request.user.followed_users.filter(author=obj).exists())
+        is_subscribed = (request.user.is_authenticated and 
+                         request.user.followed_users.filter(author=obj).
+                         exists())
+        return is_subscribed
 
 
 class SubscribeSerializer(UserSerializer):
@@ -46,9 +48,10 @@ class SubscribeSerializer(UserSerializer):
         recipes_limit = self.context['request'].GET.get('recipes_limit')
         if recipes_limit and recipes_limit.isdigit():
             queryset = queryset[: int(recipes_limit)]
-        return RecipeShortSerializer(
-            queryset, many=True, context=self.context
-        ).data
+        recipes = RecipeShortSerializer(
+            queryset, many=True, 
+            context=self.context).data
+        return recipes
 
 
 class SubscribeCreateSerializer(serializers.ModelSerializer):
@@ -151,15 +154,19 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         )
 
     def get_is_favorited(self, obj):
-        return self.get_is_in_user_field(obj, 'recipes_favorite_related')
+        is_favorited = self.get_is_in_user_field(obj, 'recipes_favorite_related')
+        return is_favorited
 
     def get_is_in_shopping_cart(self, obj):
-        return self.get_is_in_user_field(obj, 'recipes_shoppingcart_related')
+        is_in_shopping_cart = self.get_is_in_user_field(
+            obj, 'recipes_shoppingcart_related')
+        return is_in_shopping_cart
 
     def get_is_in_user_field(self, obj, field):
         request = self.context.get('request')
-        return (request.user.is_authenticated and getattr(
+        is_in_user_field = (request.user.is_authenticated and getattr(
             request.user, field).filter(recipe=obj).exists())
+        return is_in_user_field
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
