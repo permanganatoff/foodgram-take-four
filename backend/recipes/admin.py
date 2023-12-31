@@ -39,7 +39,8 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description='Ingredients')
     def display_ingredients(self, obj):
-        ingredients_list = [ingredient.name for ingredient in obj.ingredients.all()]
+        ingredients_list = [
+            ingredient.name for ingredient in obj.ingredients.all()]
         if ingredients_list:
             return ', '.join(ingredients_list)
         else:
@@ -47,7 +48,8 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description='Photo')
     def display_image(self, obj):
-        return mark_safe(f"<img src={obj.image.url} width='70' height='35' border='3'>")
+        return mark_safe(
+            f"<img src={obj.image.url} width='70' height='35' border='3'>")
 
     @admin.display(description='In favorites')
     def display_favorites_count(self, obj):

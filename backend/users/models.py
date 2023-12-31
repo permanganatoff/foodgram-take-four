@@ -3,12 +3,11 @@ from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator, RegexValidator
 from django.db import models
 
-from recipes.constants import (MAX_LEN_EMAIL, MAX_LEN_NAME, 
+from recipes.constants import (MAX_LEN_EMAIL, MAX_LEN_NAME,
                                USERNAME_FIELD_CONST, REQUIRED_FIELDS_CONST)
 
 
 class User(AbstractUser):
-    
     USERNAME_FIELD = USERNAME_FIELD_CONST
     REQUIRED_FIELDS = REQUIRED_FIELDS_CONST
 
@@ -20,7 +19,8 @@ class User(AbstractUser):
         validators=[
             RegexValidator(
                 regex=r'^[a-zA-Z0-9]+([_.-]?[a-zA-Z0-9])*$',
-                message=('Only numbers, latin letters, underscore, dash, dote. '
+                message=('Only numbers, latin letters, '
+                         'underscore, dash, dote. '
                          'Marks should not be at beginning.')
             )]
     )

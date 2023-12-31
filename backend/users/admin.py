@@ -16,7 +16,7 @@ class UserAdmin(UserAdmin):
         'id'
     )
     list_filter = ('email', 'first_name', 'is_active')
-    search_fields = ('username','email')
+    search_fields = ('username', 'email')
 
     @admin.display(description='Count of recipes')
     def display_recipes_count(self, obj):

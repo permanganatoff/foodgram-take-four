@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = 'Upload data to Ingredients and Tags'
 
     def handle(self, *args, **kwargs):
-        print('Upload data to Ingredients and Tags is starting')
+        print('Upload data to Ingredients and Tags is starting.')
 
         ingredients_file = open(
             f'{settings.BASE_DIR}/data/ingredients.json',
@@ -35,5 +35,4 @@ class Command(BaseCommand):
             raise CommandError('Tags file not found')
         finally:
             tags_file.close()
-        
-        print('Upload data to Ingredients and Tags is complete')
+        print('Upload data to Ingredients and Tags is complete.')

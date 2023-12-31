@@ -6,7 +6,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import (SAFE_METHODS, IsAuthenticated,
+from rest_framework.permissions import (SAFE_METHODS,
+                                        IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
@@ -14,13 +15,15 @@ from api.filters import IngredientFilter, RecipeFilter
 from api.paginations import CustomPagination
 from api.permissions import AuthorOrReadOnly
 from api.serializers import (FavoriteCreateDeleteSerializer,
-                             IngredientSerializer, RecipeCreateSerializer,
+                             IngredientSerializer,
+                             RecipeCreateSerializer,
                              RecipeReadSerializer,
                              ShoppingCartCreateDeleteSerializer,
-                             SubscribeCreateSerializer, SubscribeSerializer,
+                             SubscribeCreateSerializer,
+                             SubscribeSerializer,
                              TagSerializer)
-from recipes.models import (AmountIngredient, Favorite, Ingredient, Recipe,
-                            ShoppingCart, Tag)
+from recipes.models import (AmountIngredient, Favorite, Ingredient,
+                            Recipe, ShoppingCart, Tag)
 from users.models import Subscription, User
 
 
@@ -37,7 +40,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeReadSerializer
         return RecipeCreateSerializer
 
-    @action(methods=['post'], detail=True,
+    @action(
+        methods=['post'], detail=True,
         permission_classes=[permissions.IsAuthenticated])
     def favorite(self, request, pk=None):
         serializer = FavoriteCreateDeleteSerializer(
@@ -54,10 +58,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if instance.exists():
             instance.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response({'error': 'no such recipe'},
+        return Response(
+            {'error': 'no such recipe'},
             status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['post'], detail=True,
+    @action(
+        methods=['post'], detail=True,
         permission_classes=[permissions.IsAuthenticated])
     def shopping_cart(self, request, pk=None):
         serializer = ShoppingCartCreateDeleteSerializer(
@@ -74,7 +80,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if instance.exists():
             instance.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response({'error': 'no such recipe'},
+        return Response(
+            {'error': 'no such recipe'},
             status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['get'], detail=False,
@@ -86,13 +93,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         shopping_cart = (
             AmountIngredient.objects.select_related('recipe', 'ingredient')
             .filter(recipe__recipes_shoppingcart_related__user=request.user)
-            .values_list('ingredient__name',
+            .values_list(
+                'ingredient__name',
                 'ingredient__measurement_unit')
             .annotate(amount=Sum('amount'))
             .order_by('ingredient__name'))
-        lines = (' --- '.join(map(str, item)) + '\n' for item in shopping_cart)
+        lines = (' - '.join(map(str, item)) + '\n' for item in shopping_cart)
         text_stream.writelines(lines)
-        response = HttpResponse(text_stream.getvalue(), content_type='text/plain')
+        response = HttpResponse(
+            text_stream.getvalue(),
+            content_type='text/plain')
         response['Content-Disposition'] = (
             "attachment;filename='shopping_cart.txt'")
         return response
@@ -108,7 +118,8 @@ class UserViewSet(UserViewSet):
             return [IsAuthenticated()]
         return super().get_permissions()
 
-    @action(methods=['post'], detail=True,
+    @action(
+        methods=['post'], detail=True,
         permission_classes=[permissions.IsAuthenticated])
     def subscribe(self, request, id=None):
         serializer = SubscribeCreateSerializer(
@@ -125,10 +136,11 @@ class UserViewSet(UserViewSet):
         if subscription.exists():
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response({'error': 'no such subscribe'},
-            status=status.HTTP_400_BAD_REQUEST,)
+        return Response(
+            {'error': 'no such subscribe'},
+            status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['get'], detail=False, 
+    @action(methods=['get'], detail=False,
             permission_classes=[permissions.IsAuthenticated])
     def subscriptions(self, request):
         subscriptions = User.objects.filter(

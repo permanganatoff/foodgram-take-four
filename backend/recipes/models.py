@@ -11,7 +11,6 @@ models.CharField.register_lookup(Length)
 
 class Tag(models.Model):
     """Tag model."""
-    
     name = models.CharField(
         verbose_name='Tag name',
         max_length=MAX_LEN_TITLE,
@@ -31,7 +30,6 @@ class Tag(models.Model):
         help_text='Choose color for tag'
     )
 
-
     class Meta:
         ordering = ('name',)
         verbose_name = 'Tag'
@@ -43,7 +41,6 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     """Ingredient model."""
-    
     name = models.CharField(
         verbose_name='Ingredient name',
         max_length=MAX_LEN_TITLE,
@@ -72,7 +69,6 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     """Recipe model."""
-    
     name = models.CharField(
         verbose_name='Recipe name',
         max_length=MAX_LEN_TITLE,
