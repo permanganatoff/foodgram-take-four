@@ -3,9 +3,14 @@ from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
 
 from recipes.constants import ADMIN_INLINE_EXTRA
-
-from .models import (AmountIngredient, Favorite, Ingredient,
-                     Recipe, ShoppingCart, Tag)
+from recipes.models import (
+    AmountIngredient,
+    Favorite,
+    Ingredient,
+    Recipe,
+    ShoppingCart,
+    Tag,
+)
 
 
 class IngredientInline(admin.TabularInline):
@@ -13,6 +18,7 @@ class IngredientInline(admin.TabularInline):
     extra = ADMIN_INLINE_EXTRA
 
 
+@admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'name',
@@ -43,8 +49,7 @@ class RecipeAdmin(admin.ModelAdmin):
             ingredient.name for ingredient in obj.ingredients.all()]
         if ingredients_list:
             return ', '.join(ingredients_list)
-        else:
-            return '-'
+        return '-'
 
     @admin.display(description='Photo')
     def display_image(self, obj):
@@ -56,35 +61,38 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.recipes_favorite_related.count()
 
 
+@admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
     list_filter = ('name',)
 
 
+@admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'color', 'slug')
     search_fields = ('name', 'color')
     list_display_links = ('name', 'color')
 
 
+@admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe')
     search_fields = ('user__username', 'recipe__name')
     list_display_links = ('user', 'recipe')
 
 
+@admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe', 'date_added')
     search_fields = ('user__username', 'recipe__name')
     list_display_links = ('user', 'recipe')
 
 
+@admin.register(AmountIngredient)
+class AmountIngredientAdmin(admin.ModelAdmin):
+    list_display = ('recipe', 'ingredient', 'amount')
+
+
 admin.site.site_header = 'Foodgram Administration'
-admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Ingredient, IngredientAdmin)
-admin.site.register(Tag, TagAdmin)
-admin.site.register(ShoppingCart, ShoppingCartAdmin)
-admin.site.register(Favorite, FavoriteAdmin)
-admin.site.register(AmountIngredient)
 admin.site.unregister(Group)

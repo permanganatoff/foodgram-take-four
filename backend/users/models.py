@@ -3,8 +3,12 @@ from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator, RegexValidator
 from django.db import models
 
-from recipes.constants import (MAX_LEN_EMAIL, MAX_LEN_NAME,
-                               USERNAME_FIELD_CONST, REQUIRED_FIELDS_CONST)
+from recipes.constants import (
+    MAX_LEN_EMAIL,
+    MAX_LEN_NAME,
+    REQUIRED_FIELDS_CONST,
+    USERNAME_FIELD_CONST,
+)
 
 
 class User(AbstractUser):

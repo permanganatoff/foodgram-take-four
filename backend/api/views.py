@@ -6,24 +6,34 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import (SAFE_METHODS,
-                                        IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (
+    SAFE_METHODS,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 
 from api.filters import IngredientFilter, RecipeFilter
 from api.paginations import CustomPagination
 from api.permissions import AuthorOrReadOnly
-from api.serializers import (FavoriteCreateDeleteSerializer,
-                             IngredientSerializer,
-                             RecipeCreateSerializer,
-                             RecipeReadSerializer,
-                             ShoppingCartCreateDeleteSerializer,
-                             SubscribeCreateSerializer,
-                             SubscribeSerializer,
-                             TagSerializer)
-from recipes.models import (AmountIngredient, Favorite, Ingredient,
-                            Recipe, ShoppingCart, Tag)
+from api.serializers import (
+    FavoriteCreateDeleteSerializer,
+    IngredientSerializer,
+    RecipeCreateSerializer,
+    RecipeReadSerializer,
+    ShoppingCartCreateDeleteSerializer,
+    SubscribeCreateSerializer,
+    SubscribeSerializer,
+    TagSerializer,
+)
+from recipes.models import (
+    AmountIngredient,
+    Favorite,
+    Ingredient,
+    Recipe,
+    ShoppingCart,
+    Tag,
+)
 from users.models import Subscription, User
 
 
@@ -98,7 +108,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 'ingredient__measurement_unit')
             .annotate(amount=Sum('amount'))
             .order_by('ingredient__name'))
-        lines = (' - '.join(map(str, item)) + '\n' for item in shopping_cart)
+        lines = (' - '.join(str(field) for field in item) + '\n'
+                 for item in shopping_cart)
         text_stream.writelines(lines)
         response = HttpResponse(
             text_stream.getvalue(),

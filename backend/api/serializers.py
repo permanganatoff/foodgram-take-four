@@ -3,8 +3,14 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status
 
 from recipes.constants import MAX_AMOUNT, MIN_AMOUNT
-from recipes.models import (AmountIngredient, Favorite, Ingredient,
-                            Recipe, ShoppingCart, Tag)
+from recipes.models import (
+    AmountIngredient,
+    Favorite,
+    Ingredient,
+    Recipe,
+    ShoppingCart,
+    Tag,
+)
 from users.models import Subscription, User
 
 
@@ -190,7 +196,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 detail='must be ingredients',
                 code=status.HTTP_400_BAD_REQUEST)
-        if (len(set(item['id'] for item in ingredients)) != len(ingredients)):
+        ingredient_ids = [item['id'] for item in ingredients]
+        if len(set(ingredient_ids)) != len(ingredients):
             raise serializers.ValidationError(
                 detail='ingredients should not be repeated',
                 code=status.HTTP_400_BAD_REQUEST)

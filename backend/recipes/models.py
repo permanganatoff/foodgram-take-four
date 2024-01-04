@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.functions import Length
 
-from recipes.constants import MAX_HEX, MAX_LEN_TITLE, MAX_AMOUNT, MIN_AMOUNT
+from recipes.constants import MAX_AMOUNT, MAX_HEX, MAX_LEN_TITLE, MIN_AMOUNT
 from users.models import User
 
 models.CharField.register_lookup(Length)

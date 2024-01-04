@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Subscription, User
+from users.models import Subscription, User
 
 
+@admin.register(User)
 class UserAdmin(UserAdmin):
     list_display = (
         'email',
@@ -27,5 +28,8 @@ class UserAdmin(UserAdmin):
         return obj.author.count()
 
 
-admin.site.register(User, UserAdmin)
-admin.site.register(Subscription)
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'author', 'id')
+    list_filter = ('user', 'author', 'id')
+    search_fields = ('user', 'author', 'id')
