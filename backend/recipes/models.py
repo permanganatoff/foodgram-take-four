@@ -174,8 +174,44 @@ class AmountIngredient(models.Model):
         )
 
 
-class UserRecipeRelation(models.Model):
-    """Model for user-recipe relations."""
+class Favorite(models.Model):
+    """Model for favorite recipes."""
+    user = models.ForeignKey(
+        to=User,
+        verbose_name='User',
+        on_delete=models.CASCADE,
+        related_name='%(app_label)s_%(class)s_related',
+    )
+    recipe = models.ForeignKey(
+        to=Recipe,
+        verbose_name='Recipe',
+        on_delete=models.CASCADE,
+        related_name='%(app_label)s_%(class)s_related',
+    )
+    date_added = models.DateTimeField(
+        verbose_name='Date of addition',
+        auto_now_add=True,
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = 'Favorite recipe'
+        verbose_name_plural = 'Favorite recipes'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name=('\n%(app_label)s_%(class)s recipe already'
+                      ' linked to this user\n'),
+            ),
+        )
+
+    def __str__(self):
+        return f'{self.user} added {self.recipe} to Favorites'
+
+
+class ShoppingCart(models.Model):
+    """Model for shopping cart."""
+
     user = models.ForeignKey(
         to=User,
         verbose_name='User',
@@ -190,7 +226,8 @@ class UserRecipeRelation(models.Model):
     )
 
     class Meta:
-        abstract = True
+        verbose_name = 'Recipe in shopping cart'
+        verbose_name_plural = 'Recipes in shopping cart'
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
@@ -198,29 +235,6 @@ class UserRecipeRelation(models.Model):
                       ' linked to this user\n'),
             ),
         )
-
-
-class Favorite(UserRecipeRelation):
-    """Model for favorite recipes."""
-    date_added = models.DateTimeField(
-        verbose_name='Date of addition',
-        auto_now_add=True,
-        editable=False,
-    )
-
-    class Meta(UserRecipeRelation.Meta):
-        verbose_name = 'Favorite recipe'
-        verbose_name_plural = 'Favorite recipes'
-
-    def __str__(self):
-        return f'{self.user} added {self.recipe} to Favorites'
-
-
-class ShoppingCart(UserRecipeRelation):
-    """Model for shopping cart."""
-    class Meta(UserRecipeRelation.Meta):
-        verbose_name = 'Recipe in shopping cart'
-        verbose_name_plural = 'Recipes in shopping cart'
 
     def __str__(self):
         return f'{self.recipe} is in {self.user} shopping cart'

@@ -65,7 +65,7 @@ class SubscribeCreateSerializer(serializers.ModelSerializer):
         user_id = data.get('user').id
         if user_id == author_id:
             raise serializers.ValidationError(
-                detail='no way to subscribe to yourself',
+                detail='you cannot subscribe to yourself',
                 code=status.HTTP_400_BAD_REQUEST)
         if Subscription.objects.filter(
                 author=author_id, user=user_id).exists():

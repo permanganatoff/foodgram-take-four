@@ -1,5 +1,4 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator, RegexValidator
 from django.db import models
 
@@ -83,8 +82,3 @@ class Subscription(models.Model):
 
     def __str__(self):
         return f'User {self.user} subscribed to {self.author}'
-
-    def save(self, *args, **kwargs):
-        if self.user == self.author:
-            raise ValidationError('You cannot subscribe to yourself')
-        super().save(*args, **kwargs)
