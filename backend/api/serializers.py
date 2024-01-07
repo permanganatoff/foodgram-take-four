@@ -74,6 +74,13 @@ class SubscribeCreateSerializer(serializers.ModelSerializer):
                 code=status.HTTP_400_BAD_REQUEST)
         return data
 
+    def validate_for_delete(self, author_id, user_id):
+        if not Subscription.objects.filter(
+                author=author_id, user=user_id).exists():
+            raise serializers.ValidationError(
+                detail='no such subscribe',
+                code=status.HTTP_400_BAD_REQUEST)
+
     def to_representation(self, instance):
         return SubscribeSerializer(
             instance=instance.author,
@@ -258,6 +265,13 @@ class ShoppingCartCreateDeleteSerializer(serializers.ModelSerializer):
                                           recipe=recipe_id).exists():
             raise serializers.ValidationError('it has already been added')
         return data
+
+    def validate_for_delete(self, user_id, recipe_id):
+        if not self.Meta.model.objects.filter(
+                user_id=user_id, recipe_id=recipe_id).exists():
+            raise serializers.ValidationError(
+                detail='no such recipe',
+                code=status.HTTP_400_BAD_REQUEST)
 
     def to_representation(self, instance):
         serializer = RecipeShortSerializer(

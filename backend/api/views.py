@@ -1,9 +1,6 @@
-from io import StringIO
-
-from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
+from djoser.views import UserViewSet as BaseUserViewSet
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -26,18 +23,40 @@ from api.serializers import (
     SubscribeSerializer,
     TagSerializer,
 )
+from api.services import generate_shopping_cart_text
 from recipes.models import (
-    AmountIngredient,
-    Favorite,
     Ingredient,
     Recipe,
-    ShoppingCart,
     Tag,
 )
-from users.models import Subscription, User
+from users.models import User
 
 
-class RecipeViewSet(viewsets.ModelViewSet):
+class BaseRelationsViewSet:
+    def relation_create(self, request, serializer_class, data):
+        serializer = serializer_class(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def relation_delete(self, request, serializer_class,
+                        user_id, target_id, target_type):
+        serializer = serializer_class()
+        if target_type == 'author':
+            serializer.validate_for_delete(
+                user_id=user_id, author_id=target_id)
+            serializer.Meta.model.objects.filter(
+                user_id=user_id, author_id=target_id).delete()
+        elif target_type == 'recipe':
+            serializer.validate_for_delete(
+                user_id=user_id, recipe_id=target_id)
+            serializer.Meta.model.objects.filter(
+                user_id=user_id, recipe_id=target_id).delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RecipeViewSet(BaseRelationsViewSet, viewsets.ModelViewSet):
     queryset = Recipe.objects.select_related('author').prefetch_related(
         'tags', 'ingredients')
     permission_classes = [AuthorOrReadOnly]
@@ -50,76 +69,59 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeReadSerializer
         return RecipeCreateSerializer
 
-    @action(
-        methods=['post'], detail=True,
-        permission_classes=[permissions.IsAuthenticated])
+    @action(methods=['post'], detail=True,
+            permission_classes=[permissions.IsAuthenticated])
     def favorite(self, request, pk=None):
-        serializer = FavoriteCreateDeleteSerializer(
-            data={'user': request.user.id, 'recipe': pk},
-            context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        data = {'user': request.user.id, 'recipe': pk}
+        return self.relation_create(
+            request,
+            FavoriteCreateDeleteSerializer,
+            data
+        )
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
-        instance = Favorite.objects.filter(
-            user=request.user, recipe_id=pk)
-        if instance.exists():
-            instance.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'error': 'no such recipe'},
-            status=status.HTTP_400_BAD_REQUEST)
+        return self.relation_delete(
+            request,
+            FavoriteCreateDeleteSerializer,
+            user_id=request.user.id,
+            target_id=pk,
+            target_type='recipe'
+        )
 
-    @action(
-        methods=['post'], detail=True,
-        permission_classes=[permissions.IsAuthenticated])
+    @action(methods=['post'], detail=True,
+            permission_classes=[permissions.IsAuthenticated])
     def shopping_cart(self, request, pk=None):
-        serializer = ShoppingCartCreateDeleteSerializer(
-            data={'user': request.user.id, 'recipe': pk},
-            context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        data = {'user': request.user.id, 'recipe': pk}
+        return self.relation_create(
+            request,
+            ShoppingCartCreateDeleteSerializer,
+            data
+        )
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
-        instance = ShoppingCart.objects.filter(
-            user=request.user, recipe_id=pk)
-        if instance.exists():
-            instance.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'error': 'no such recipe'},
-            status=status.HTTP_400_BAD_REQUEST)
+        return self.relation_delete(
+            request,
+            ShoppingCartCreateDeleteSerializer,
+            user_id=request.user.id,
+            target_id=pk,
+            target_type='recipe'
+        )
 
     @action(methods=['get'], detail=False,
             permission_classes=[permissions.IsAuthenticated])
     def download_shopping_cart(self, request):
-        text_stream = StringIO()
-        text_stream.write('Список покупок\n')
-        text_stream.write('Ингредиент - Единица измерения - Количество\n')
-        shopping_cart = (
-            AmountIngredient.objects.select_related('recipe', 'ingredient')
-            .filter(recipe__recipes_shoppingcart_related__user=request.user)
-            .values_list(
-                'ingredient__name',
-                'ingredient__measurement_unit')
-            .annotate(amount=Sum('amount'))
-            .order_by('ingredient__name'))
-        lines = (' - '.join(str(field) for field in item) + '\n'
-                 for item in shopping_cart)
-        text_stream.writelines(lines)
+        shopping_cart_text = generate_shopping_cart_text(request)
         response = HttpResponse(
-            text_stream.getvalue(),
+            shopping_cart_text,
             content_type='text/plain')
         response['Content-Disposition'] = (
             "attachment;filename='shopping_cart.txt'")
         return response
 
 
-class UserViewSet(UserViewSet):
+class UserViewSet(BaseRelationsViewSet, BaseUserViewSet):
     queryset = User.objects.all()
     permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = CustomPagination
@@ -129,27 +131,21 @@ class UserViewSet(UserViewSet):
             return [IsAuthenticated()]
         return super().get_permissions()
 
-    @action(
-        methods=['post'], detail=True,
-        permission_classes=[permissions.IsAuthenticated])
+    @action(methods=['post'], detail=True,
+            permission_classes=[permissions.IsAuthenticated])
     def subscribe(self, request, id=None):
-        serializer = SubscribeCreateSerializer(
-            data={'user': request.user.id, 'author': id},
-            context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        data = {'user': request.user.id, 'author': id}
+        return self.relation_create(request, SubscribeCreateSerializer, data)
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id=None):
-        subscription = Subscription.objects.filter(
-            user=request.user, author=id)
-        if subscription.exists():
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'error': 'no such subscribe'},
-            status=status.HTTP_400_BAD_REQUEST)
+        return self.relation_delete(
+            request,
+            SubscribeCreateSerializer,
+            user_id=request.user.id,
+            target_id=id,
+            target_type='author'
+        )
 
     @action(methods=['get'], detail=False,
             permission_classes=[permissions.IsAuthenticated])
