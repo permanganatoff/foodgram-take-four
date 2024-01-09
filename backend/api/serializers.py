@@ -185,10 +185,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'tags', 'author', 'ingredients')
 
     def validate(self, data):
-        if not data.get('image'):
-            raise serializers.ValidationError(
-                detail='must be image',
-                code=status.HTTP_400_BAD_REQUEST)
         tags = data.get('tags')
         if not tags:
             raise serializers.ValidationError(
@@ -209,6 +205,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 detail='ingredients should not be repeated',
                 code=status.HTTP_400_BAD_REQUEST)
         return data
+
+    def validate_image(self, image):
+        if not image:
+            raise serializers.ValidationError(
+                {'image': 'must be image'}
+            )
+        return image
 
     @staticmethod
     def create_ingredients(recipe, ingredients):
